@@ -9,12 +9,12 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 
-class multicastthreadRun implements Runnable,serverInterface{
+class MulticastthreadRun implements Runnable,serverInterface{
 	//ArrayList<Client> ClientIpArrayList=new ArrayList<Client>();//Array List For Saving The IPs of the Clients
 	
-	
-	
-	Client clnt=new Client();
+	public ArrayList<Client> ClientIpArrayList=new ArrayList<Client>();//Array List For Saving The IPs of the Clients
+
+
 	
 	/*
 	public void setMyList(ArrayList<Client> ClientIpArrayList){
@@ -56,14 +56,10 @@ class multicastthreadRun implements Runnable,serverInterface{
 					InetAddress clientIP=datagramPacketunicastmessage2.getAddress();//getting the IP of the client side in bytes format
 					String clientIPString=clientIP.toString();//converting the IP from Bytes format to String format to access the client IPs Array list
 					
+					Client clnt=new Client(clientIPString);
 					
 					//================the new part
-					ArrayList<String> myarray=clnt.getMyList();
-					if(!myarray.contains(clientIPString)){//checking if the array list contains that IP address or not,if not we will add it to it
-						myarray.add(clientIPString);	
-						
-						clnt.setMyList(myarray);
-					}
+					if(addClient(clnt)>-1){
 					
 					b2=datagramPacketunicastmessage2.getData();
 					String messagereceived=new String (b2);
@@ -74,19 +70,19 @@ class multicastthreadRun implements Runnable,serverInterface{
 						byte [] byteAcknowledgement=acknowledgement.getBytes();//Transferring the Strings to Bytes
 						DatagramPacket datagramPacketUnicast3=new DatagramPacket(byteAcknowledgement,byteAcknowledgement.length,clientIP,portunicast);//creating the packet
 						datagramSocketunicast.send(datagramPacketUnicast3);//send the packet
-						serverstate=1;//the server is ready to receive 
+						clnt.setStatus(1);//the server is ready to receive 
 						
 						//thread to start the unicast sending and recieving messages
 						
 						
 						
 						
-						Thread uniCastThread =new Thread(new uniCastThreadRun(serverstate));
+						Thread uniCastThread =new Thread(new UniCastThreadRun(clnt));
 						uniCastThread.start();
 
 						
 					}
-					
+					}
 				} catch (UnknownHostException e) {
 					e.printStackTrace();
 				} catch (IOException e) {
@@ -95,12 +91,30 @@ class multicastthreadRun implements Runnable,serverInterface{
 				
 		
 	}
-}
+	
+	public void setMyList(ArrayList<Client> ClientIpArrayList){
+		
+		this.ClientIpArrayList=ClientIpArrayList;
+	}
+	
+	private int addClient(Client c){
+		//TODO check if the client already exists prior to insert it in the list
+		if(!ClientIpArrayList.contains(c)){//checking if the array list contains that IP address or not,if not we will add it to it
+			ClientIpArrayList.add(c);
+			return ClientIpArrayList.size();
+			
+			
+		}else
+			return -1;
+		
+	}
 
-class uniCastThreadRun implements Runnable, serverInterface{ //client
-	int stateclient;
-	uniCastThreadRun(int serverstate){
-		stateclient= serverstate;
+
+class UniCastThreadRun implements Runnable, serverInterface{ //client
+	
+	Client client = null;
+	UniCastThreadRun(Client c){
+		client=c;
 	}
 	
 	@Override
@@ -127,8 +141,8 @@ class uniCastThreadRun implements Runnable, serverInterface{ //client
 		} catch (UnknownHostException e2) {
 			e2.printStackTrace();
 		}
-		while(true){
-			if(stateclient == 1){   
+		while(client.getStatus() == 1){
+		   
 				//Receiving the Sound States,(-->datagramPacketSoundStates4)
 				byte [] bsoundstates=new byte[100];
 				DatagramPacket datagramPacketSoundStates4=new DatagramPacket(bsoundstates, bsoundstates.length);
@@ -174,12 +188,12 @@ class uniCastThreadRun implements Runnable, serverInterface{ //client
 						//multiCastObject.ClientIpArrayList.remove(clientIP);//Removing the the Client IP from the array list
 						
 						//==========================================not sure about it
-						Client clnt=new Client();
-						ArrayList<String> myarray=clnt.getMyList();
-						myarray.remove(clientIP);
-						clnt.setMyList(myarray);
 						
-						stateclient = 0;//setting the flag 0 to not access the if condition again
+						
+						ClientIpArrayList.remove(clientIP);
+						
+						
+						client.setStatus(0);//setting the flag 0 to not access the if condition again
 						try {
 							multicastSocket.leaveGroup(group);
 						} catch (IOException e) {
@@ -197,48 +211,15 @@ class uniCastThreadRun implements Runnable, serverInterface{ //client
 							e.printStackTrace();
 						}
 					}
-			}
-		}//the end of the infinite while loop
+			
+		}//the end of the attention loop it finishes when the client status goes to 0
+		//TODO other cleaning operations if needed
 		
 	}//the end of the run loop
 }
 
-class Client{
-	//=============================ask juan carlos about the static
-	String ClientIP;
-	ArrayList<String> ClientIpArrayList=new ArrayList<String>();//Array List For Saving The IPs of the Clients
-	
-	/*
-	public void setclientIP(String clientip){
-		this.ClientIP=clientip;
-		ClientIpArrayList.add(ClientIP);
-	}
-	
-	public String getClientIP(){
-		return ClientIP;
-	}
-	*/
-	
-	public void setMyList(ArrayList<String> ClientIpArrayList){
-		this.ClientIpArrayList=ClientIpArrayList;
-	}
-	
-	
-	public ArrayList getMyList(){
-		return ClientIpArrayList;
-	}
-	
-}
 
-public class multicastthread {
 
-	public static void main(String[] args) {
+}//end multicast
 
-		Thread multiCastThread=new Thread(new multicastthreadRun());
-		
-		multiCastThread.start();
-		
-	}
-
-}
 
