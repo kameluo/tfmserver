@@ -9,31 +9,13 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 
-class MulticastthreadRun implements Runnable,serverInterface{
-	//ArrayList<Client> ClientIpArrayList=new ArrayList<Client>();//Array List For Saving The IPs of the Clients
-	
+class MulticastthreadRun implements Runnable,serverInterface{	
 	public ArrayList<Client> ClientIpArrayList=new ArrayList<Client>();//Array List For Saving The IPs of the Clients
 
-
-	
-	/*
-	public void setMyList(ArrayList<Client> ClientIpArrayList){
-		this.ClientIpArrayList=ClientIpArrayList;
-	}
-	
-	public ArrayList getMyList(){
-		return ClientIpArrayList;
-	}
-	*/
-	
-	
-	
-	
 	static int serverstate;//flag 
 	
 	@Override
 	public void run() {
-		
 				
 				try {
 					
@@ -58,30 +40,24 @@ class MulticastthreadRun implements Runnable,serverInterface{
 					
 					Client clnt=new Client(clientIPString);
 					
-					//================the new part
+					//check before adding in the Arraylist
 					if(addClient(clnt)>-1){
 					
 					b2=datagramPacketunicastmessage2.getData();
 					String messagereceived=new String (b2);
 					System.out.println(messagereceived);
-					if(messagereceived.equals("CRQ")){
-						//Sending the "200" means that the server has received the "CRQ" message unicast datagram object,(-->datagrampacketsentmulticastmessage3)
-						String acknowledgement="200";
-						byte [] byteAcknowledgement=acknowledgement.getBytes();//Transferring the Strings to Bytes
-						DatagramPacket datagramPacketUnicast3=new DatagramPacket(byteAcknowledgement,byteAcknowledgement.length,clientIP,portunicast);//creating the packet
-						datagramSocketunicast.send(datagramPacketUnicast3);//send the packet
-						clnt.setStatus(1);//the server is ready to receive 
-						
-						//thread to start the unicast sending and recieving messages
-						
-						
-						
-						
-						Thread uniCastThread =new Thread(new UniCastThreadRun(clnt));
-						uniCastThread.start();
-
-						
-					}
+						if(messagereceived.equals("CRQ")){
+							//Sending the "200" means that the server has received the "CRQ" message unicast datagram object,(-->datagrampacketsentmulticastmessage3)
+							String acknowledgement="200";
+							byte [] byteAcknowledgement=acknowledgement.getBytes();//Transferring the Strings to Bytes
+							DatagramPacket datagramPacketUnicast3=new DatagramPacket(byteAcknowledgement,byteAcknowledgement.length,clientIP,portunicast);//creating the packet
+							datagramSocketunicast.send(datagramPacketUnicast3);//send the packet
+							clnt.setStatus(1);//the server is ready to receive 
+							
+							//thread to start the unicast sending and receiving messages
+							Thread uniCastThread =new Thread(new UniCastThreadRun(clnt));
+							uniCastThread.start();
+						}
 					}
 				} catch (UnknownHostException e) {
 					e.printStackTrace();
@@ -103,10 +79,8 @@ class MulticastthreadRun implements Runnable,serverInterface{
 			ClientIpArrayList.add(c);
 			return ClientIpArrayList.size();
 			
-			
 		}else
 			return -1;
-		
 	}
 
 
@@ -121,7 +95,6 @@ class UniCastThreadRun implements Runnable, serverInterface{ //client
 
 	public void run() {
 		
-		
 		int portunicast=2000;
 		DatagramSocket datagramSocketunicast = null;
 		try {
@@ -129,7 +102,7 @@ class UniCastThreadRun implements Runnable, serverInterface{ //client
 		} catch (SocketException e2) {
 			e2.printStackTrace();
 		}
-		MulticastSocket multicastSocket = null;
+		MulticastSocket multicastSocket = null;//for disconnecting
 		try {
 			multicastSocket = new MulticastSocket(3456);
 		} catch (IOException e2) {
@@ -185,13 +158,13 @@ class UniCastThreadRun implements Runnable, serverInterface{ //client
 						datagramSocketunicast.close();
 						datagramSocketunicast.disconnect();
 						//leave the multicastSocket
-						//multiCastObject.ClientIpArrayList.remove(clientIP);//Removing the the Client IP from the array list
+						try {
+							multicastSocket.leaveGroup(group);
+						} catch (IOException e1) {
+							e1.printStackTrace();
+						}
 						
-						//==========================================not sure about it
-						
-						
-						ClientIpArrayList.remove(clientIP);
-						
+						ClientIpArrayList.remove(clientIP);//removing the client IP from the ArrayList
 						
 						client.setStatus(0);//setting the flag 0 to not access the if condition again
 						try {
@@ -216,10 +189,7 @@ class UniCastThreadRun implements Runnable, serverInterface{ //client
 		//TODO other cleaning operations if needed
 		
 	}//the end of the run loop
-}
-
-
-
+}//the end fo the UniCastThreadRun class
 }//end multicast
 
 
