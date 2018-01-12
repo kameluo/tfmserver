@@ -1,5 +1,7 @@
 package projectserver;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -7,7 +9,10 @@ import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 class MulticastthreadRun implements Runnable,serverInterface{	
 	public ArrayList<Client> ClientIpArrayList=new ArrayList<Client>();//Array List For Saving The IPs of the Clients
@@ -83,7 +88,7 @@ class MulticastthreadRun implements Runnable,serverInterface{
 			return -1;
 	}
 
-
+//TODO The UniCast Class
 class UniCastThreadRun implements Runnable, serverInterface{ //client
 	
 	Client client = null;
@@ -94,6 +99,20 @@ class UniCastThreadRun implements Runnable, serverInterface{ //client
 	@Override
 
 	public void run() {
+		
+		//Constructing the date
+		DateFormat dateformat = new SimpleDateFormat("dd/MM/yy HH:mm a");//To Set the Format of the Date
+		Date currentdate = new Date();//To Get the Current Date
+				
+		//creating a log file for the receiver side
+		File file=new File("logserver.txt");
+		if(!file.exists()){
+			try {
+				file.createNewFile();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			}
 		
 		int portunicast=2000;
 		DatagramSocket datagramSocketunicast = null;
@@ -167,11 +186,6 @@ class UniCastThreadRun implements Runnable, serverInterface{ //client
 						ClientIpArrayList.remove(clientIP);//removing the client IP from the ArrayList
 						
 						client.setStatus(0);//setting the flag 0 to not access the if condition again
-						try {
-							multicastSocket.leaveGroup(group);
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
 					}else{
 						//if the client sends something else rather than the sound states or the disconnect message we will send him "500" message,(-->datagramPacketUnicastunknownCommandMessage6)
 						System.out.println("UnKnown Command !!!");
@@ -185,11 +199,22 @@ class UniCastThreadRun implements Runnable, serverInterface{ //client
 						}
 					}
 			
+					//String Contains the received sound state,the date and time of receiving it and the IP of the client
+					String currentState=dateformat.format(currentdate)+" "+clientIP+" "+soundState;
+		
+					//Write the received state in The Log File Of The Server
+					try {
+						FileWriter fileWriterSoundStates=new FileWriter(file,true);
+						fileWriterSoundStates.write(currentState+"\r\n");
+						fileWriterSoundStates.flush();
+						fileWriterSoundStates.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+							
 		}//the end of the attention loop it finishes when the client status goes to 0
 		//TODO other cleaning operations if needed
 		
 	}//the end of the run loop
 }//the end fo the UniCastThreadRun class
 }//end multicast
-
-
