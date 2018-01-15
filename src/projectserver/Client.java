@@ -20,13 +20,15 @@ class Client{
 	public void setStatus(int status) {
 		this.status = status;
 	}
-
-	public Client(String ip){
-		
-		clientIP=ip;
+	
+	
+	public Client(int status){
+		this.status=status;
 	}
 	
-	
+	public Client(String ip){
+		clientIP=ip;
+	}
 	/*
 	public void setclientIP(String clientip){
 		this.ClientIP=clientip;
@@ -37,9 +39,4 @@ class Client{
 		return ClientIP;
 	}
 	*/
-	
-	
-
-
-
 }

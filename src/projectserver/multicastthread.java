@@ -33,6 +33,7 @@ class MulticastthreadRun implements Runnable,serverInterface{
 					//Sending the log In message to the whole group by a multicast datagram object,(-->datagrampacketsentmulticastmessage1)
 					DatagramPacket datagrampacketsentmulticastmessage1=new DatagramPacket(loginMessage.getBytes(),loginMessage.length(),group,portmulticast);
 					multicastSocket.send(datagrampacketsentmulticastmessage1);
+					System.out.println("before the CRQ");
 					
 					//Receiving the "CRQ" message from the Client by a unicast datagram object,(-->datagrampacketsentmulticastmessage2)
 					int portunicast=2000;
@@ -44,7 +45,7 @@ class MulticastthreadRun implements Runnable,serverInterface{
 					String clientIPString=clientIP.toString();//converting the IP from Bytes format to String format to access the client IPs Array list
 					
 					Client clnt=new Client(clientIPString);
-					
+					clnt.setClientIP(clientIPString);
 					//check before adding in the Arraylist
 					if(addClient(clnt)>-1){
 					
@@ -52,9 +53,9 @@ class MulticastthreadRun implements Runnable,serverInterface{
 					String messagereceived=new String (b2);
 					System.out.println(messagereceived);
 						if(messagereceived.equals("CRQ")){
-							//Sending the "200" means that the server has received the "CRQ" message unicast datagram object,(-->datagrampacketsentmulticastmessage3)
-							String acknowledgement="200";
-							byte [] byteAcknowledgement=acknowledgement.getBytes();//Transferring the Strings to Bytes
+							System.out.println("hello from if condition------------------");
+							//Sending the "acknowledgementSoundState" means that the server has received the "CRQ" message unicast datagram object,(-->datagrampacketsentmulticastmessage3)
+							byte [] byteAcknowledgement=acknowledgementSoundState.getBytes();//Transferring the Strings to Bytes
 							DatagramPacket datagramPacketUnicast3=new DatagramPacket(byteAcknowledgement,byteAcknowledgement.length,clientIP,portunicast);//creating the packet
 							datagramSocketunicast.send(datagramPacketUnicast3);//send the packet
 							clnt.setStatus(1);//the server is ready to receive 
@@ -62,6 +63,8 @@ class MulticastthreadRun implements Runnable,serverInterface{
 							//thread to start the unicast sending and receiving messages
 							Thread uniCastThread =new Thread(new UniCastThreadRun(clnt));
 							uniCastThread.start();
+							
+						
 						}
 					}
 				} catch (UnknownHostException e) {
@@ -134,7 +137,6 @@ class UniCastThreadRun implements Runnable, serverInterface{ //client
 			e2.printStackTrace();
 		}
 		while(client.getStatus() == 1){
-		   
 				//Receiving the Sound States,(-->datagramPacketSoundStates4)
 				byte [] bsoundstates=new byte[100];
 				DatagramPacket datagramPacketSoundStates4=new DatagramPacket(bsoundstates, bsoundstates.length);
@@ -147,7 +149,8 @@ class UniCastThreadRun implements Runnable, serverInterface{ //client
 				
 				String soundStateMessageRecieved=new String(bsoundstates);
 				InetAddress clientIP=datagramPacketSoundStates4.getAddress();//getting the IP of the client side in bytes format
-
+				client.setClientIP(clientIP.toString());//  ask juan carlos about it
+				
 				System.out.println(soundStateMessageRecieved);
 				
 				//Sending Acknowledgment to the client to let him know that the server received the Sound State Message,(-->datagramPacketUnicastSoundState5)
@@ -215,6 +218,10 @@ class UniCastThreadRun implements Runnable, serverInterface{ //client
 		}//the end of the attention loop it finishes when the client status goes to 0
 		//TODO other cleaning operations if needed
 		
+		
 	}//the end of the run loop
-}//the end fo the UniCastThreadRun class
+	
+	
+	
+}//the end of the UniCastThreadRun class
 }//end multicast
