@@ -6,7 +6,9 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.MulticastSocket;
+import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.text.DateFormat;
@@ -26,14 +28,19 @@ class MulticastthreadRun implements Runnable,serverInterface{
 					//First step is to send a multicast message for all the clients
 					int portmulticast=3456;
 					InetAddress group=InetAddress.getByName("225.4.5.6");//creating a multicast IP address
-					MulticastSocket multicastSocket=new MulticastSocket(portmulticast);//opening a multicast socket port
-					multicastSocket.joinGroup(group);//subscribing the multicast IP address to  that socket port,listening to the messages of that IP address from that port
+					InetSocketAddress mg = new InetSocketAddress(group,portmulticast);
+					InetSocketAddress is = new InetSocketAddress("192.168.1.203",portmulticast);
+					MulticastSocket multicastSocket=new MulticastSocket(is);//opening a multicast socket port
+					NetworkInterface nis = NetworkInterface.getByInetAddress(is.getAddress());
+					multicastSocket.joinGroup(mg,nis);//subscribing the multicast IP address to  that socket port,listening to the messages of that IP address from that port
 					
 					
 					//Receiving the "CRQ" message from the Client by a multicast datagram object,(-->datagrampacketsentmulticastmessage2) 
 					byte [] b2=new byte[100];
-					DatagramPacket datagramPacketunicastmessage2=new DatagramPacket(b2, b2.length);
-					multicastSocket.receive(datagramPacketunicastmessage2);//receiving the "CRQ" message in a multicast socket  
+					DatagramPacket datagramPacketunicastmessage2=new DatagramPacket(b2, b2.length,mg);
+					multicastSocket.receive(datagramPacketunicastmessage2);//receiving the "CRQ" message in a multicast socket
+					String message=new String(b2);
+					System.out.println(message);
 					InetAddress clientIP=datagramPacketunicastmessage2.getAddress();//getting the IP of the client side in bytes format
 					int clientPort=datagramPacketunicastmessage2.getPort();//getting the Port Number of the client side
 					String clientIPString=clientIP.toString();//converting the IP from Bytes format to String format to access the client IPs Array list
@@ -124,11 +131,11 @@ class UniCastThreadRun implements Runnable, serverInterface{ //client
 		
 		String clientIPString=client.getClientIP();
 		InetAddress clientIP = null;
-			try {
-				clientIP = InetAddress.getByName(clientIPString);
-			} catch (UnknownHostException e3) {
-				e3.printStackTrace();
-			}//converting the string format to inetaddress format
+		try {
+			clientIP = InetAddress.getByName(clientIPString);
+		} catch (UnknownHostException e3) {
+			e3.printStackTrace();
+		}//converting the string format to inetaddress format
 		String clientPortString=client.getClientPort();
 		int clientPortInteger=Integer.parseInt(clientPortString);//converting the string format to integer format
 		
