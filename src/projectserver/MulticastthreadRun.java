@@ -27,15 +27,19 @@ class MulticastthreadRun implements Runnable,serverInterface{
 				try {
 					//by using the broadcast
 					//Receiving the "CRQ" message from the Client by a broadcast datagram object,(-->datagrampacketsentmulticastmessage2) 
-						int portBroadCast=2001;//receiving port
+						int portBroadCast=20001;//receiving port
 						byte [] b2=new byte[3];
+					//	InetInterface
+						InetAddress address=InetAddress.getByName("192.168.1.203");
+						InetSocketAddress socket = new InetSocketAddress(address,portBroadCast);
 						DatagramPacket datagramPacketbroadcastmessage=new DatagramPacket(b2, b2.length);
-						DatagramSocket datagramSocketunicast=new DatagramSocket(portBroadCast);
+						DatagramSocket datagramSocketunicast=new DatagramSocket(socket);
 						datagramSocketunicast.receive(datagramPacketbroadcastmessage);
 						InetAddress clientIP=datagramPacketbroadcastmessage.getAddress();//getting the IP of the client side in bytes format
 						int clientPort=datagramPacketbroadcastmessage.getPort();//getting the Port Number of the client side to send him the packets through it
+						System.out.println(clientPort);
 						String clientIPString=clientIP.toString();//converting the IP from Bytes format to String format to access the client IPs Array list
-						String clientPortString=String.valueOf(clientPort);//converting the Port from integer format to String format to access the client IPs Array list
+						String clientPortString=String.valueOf(2002);//converting the Port from integer format to String format to access the client IPs Array list
 						String messagebroadcast=new String(b2);
 						System.out.println(messagebroadcast);
 						System.out.println(messagebroadcast.equals("CRQ"));
@@ -85,7 +89,6 @@ class MulticastthreadRun implements Runnable,serverInterface{
 		if(!ClientIpArrayList.contains(c)){//checking if the array list contains that IP address or not,if not we will add it to it
 			ClientIpArrayList.add(c);
 			return ClientIpArrayList.size();
-			
 		}else
 			return -1;
 	}
@@ -127,6 +130,7 @@ class UniCastThreadRun implements Runnable, serverInterface{ //client
 			e3.printStackTrace();
 		}
 		String clientPortString=client.getClientPort();
+		//String clientPortString="2002";
 		System.out.println(clientPortString);
 		int clientPortInteger=Integer.parseInt(clientPortString);//converting the string format to integer format
 		
