@@ -9,6 +9,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.MulticastSocket;
 import java.net.NetworkInterface;
+import java.net.SocketAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.text.DateFormat;
@@ -16,7 +17,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-class MulticastthreadRun implements Runnable,serverInterface{	
+class MulticastthreadRun2 implements Runnable,serverInterface{	
 	public ArrayList<Client> ClientIpArrayList=new ArrayList<Client>();//Array List For Saving The IPs of the Clients
 
 	static int serverstate;//flag 
@@ -26,46 +27,37 @@ class MulticastthreadRun implements Runnable,serverInterface{
 				//while(true){
 				try {
 					//by using the broadcast
-					//Receiving the "CRQ" message from the Client by a broadcast datagram object,(-->datagrampacketsentmulticastmessage2) 
+					//Receiving the "CRQ" message from the Client by a broadcast datagram object 
 						int portBroadCast=20001;//receiving port
-						byte [] b2=new byte[3];
-						InetAddress address=InetAddress.getByName("192.168.0.104");//the IP of This Machine
-						InetSocketAddress socket = new InetSocketAddress(address,portBroadCast);
-						DatagramPacket datagramPacketbroadcastmessage=new DatagramPacket(b2, b2.length);
-						DatagramSocket datagramSocketunicast=new DatagramSocket(socket);
-						datagramSocketunicast.receive(datagramPacketbroadcastmessage);
-						InetAddress clientIP=datagramPacketbroadcastmessage.getAddress();//getting the IP of the client side in bytes format
-						int clientPort=datagramPacketbroadcastmessage.getPort();//getting the Port Number of the client side to send him the packets through it
-						System.out.println(clientPort);
-						String clientIPString=clientIP.toString();//converting the IP from Bytes format to String format to access the client IPs Array list
+						InetAddress address=InetAddress.getByName("192.168.0.107");//the IP of This Machine
+						//InetSocketAddress socket = new InetSocketAddress(address,portBroadCast);
+						SocketAddress socket = new InetSocketAddress(address,portBroadCast);
+						setsocket(socket);//to pass it to the unicast class
+						String messagereceived=recievemessage(socket);
+												
+						
+						InetAddress clientIP=getclientIP();//getting the IP of the client side in bytes format
+						int clientPort=getclientPort();//getting the Port Number of the client side to send him the packets through it
+						
+						String clientIPString=clientIP.getHostAddress();//converting the IP from Bytes format to String format to access the client IPs Array list
 						String clientPortString=String.valueOf(clientPort);//converting the Port from integer format to String format to access the client IPs Array list
-						String messagebroadcast=new String(b2);
-						System.out.println(messagebroadcast);
-						System.out.println(messagebroadcast.equals("CRQ"));
+						
+						System.out.println(messagereceived);
+						System.out.println(messagereceived.equals("CRQ"));
 						
 					//the end of the broadcast
 					System.out.println("after receiving the CRQ");
 					
-					//Sending the log In message to the whole group by a unicast datagram object,(-->datagrampacketsentmulticastmessage1)
-					DatagramPacket datagrampacketServerOnMessage=new DatagramPacket(loginMessage.getBytes(),loginMessage.length(),clientIP,clientPort);
-					datagramSocketunicast.send(datagrampacketServerOnMessage);
+					//Sending the log In message to the whole group by a unicast datagram object
+					send(loginMessage,clientIP,clientPort);
 					
 					//passing the ClientIP and the Client Port to the client class to use them in the unicast thread later
 					Client clnt=new Client(clientIPString,clientPortString);
-					//clnt.setClientIP(clientIPString);
-					/////clnt.setClientIPandPort(clientIPString,clientPortString);
 					//check before adding in the Arraylist
 					if(addClient(clnt)>-1){
-						if(messagebroadcast.equals("CRQ")){
+						if(messagereceived.equals("CRQ")){
 							System.out.println("hello from if condition------------------");
-							/* there is no need for this step anymore
-							//Sending the "acknowledgementSoundState" means that the server has received the "CRQ" message unicast datagram object,(-->datagrampacketsentmulticastmessage3)
-							byte [] byteAcknowledgement=acknowledgementSoundState.getBytes();//Transferring the Strings to Bytes
-							DatagramPacket datagramPacketUnicast3=new DatagramPacket(byteAcknowledgement,byteAcknowledgement.length,clientIP,clientPort);//creating the packet
-							datagramSocketunicast.send(datagramPacketUnicast3);//send the packet
-							*/
 							clnt.setStatus(1);//the server is ready to receive 
-							
 							//thread to start the unicast sending and receiving messages
 							Thread uniCastThread =new Thread(new UniCastThreadRun(clnt));
 							uniCastThread.start();
@@ -80,10 +72,8 @@ class MulticastthreadRun implements Runnable,serverInterface{
 	}
 	
 	public void setMyList(ArrayList<Client> ClientIpArrayList){
-		
 		this.ClientIpArrayList=ClientIpArrayList;
 	}
-	
 	private int addClient(Client c){
 		//TODO check if the client already exists prior to insert it in the list
 		if(!ClientIpArrayList.contains(c)){//checking if the array list contains that IP address or not,if not we will add it to it
@@ -92,20 +82,14 @@ class MulticastthreadRun implements Runnable,serverInterface{
 		}else
 			return -1;
 	}
-
 //TODO The UniCast Class
 class UniCastThreadRun implements Runnable, serverInterface{//client
-	
 	Client client = null;
 	UniCastThreadRun(Client c){
 		client=c;
-		
 	}
-	
 	@Override
-
 	public void run() {
-		
 		//Constructing the date
 		DateFormat dateformat = new SimpleDateFormat("dd/MM/yy HH:mm a");//To Set the Format of the Date
 		Date currentdate = new Date();//To Get the Current Date
@@ -118,8 +102,7 @@ class UniCastThreadRun implements Runnable, serverInterface{//client
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			}
-		
+		}
 		String clientIPString=client.getClientIP();
 		InetAddress clientIP = null;
 		try {
@@ -130,42 +113,15 @@ class UniCastThreadRun implements Runnable, serverInterface{//client
 			e3.printStackTrace();
 		}
 		String clientPortString=client.getClientPort();
-		//String clientPortString="2002";
 		System.out.println(clientPortString);
 		int clientPortInteger=Integer.parseInt(clientPortString);//converting the string format to integer format
-		
-		DatagramSocket datagramSocketunicast = null;
-		try {
-		datagramSocketunicast = new DatagramSocket(clientPortInteger);
-		} catch (SocketException e2) {
-			e2.printStackTrace();
-		}
 			
 		while(client.getStatus() == 1){
-				//Receiving the Sound States,(-->datagramPacketSoundStates4)
-				byte [] bsoundstates=new byte[3];
-				DatagramPacket datagramPacketSoundStates4=new DatagramPacket(bsoundstates, bsoundstates.length);
+				//Receiving the Sound States
+				String soundStateMessageRecieved=recievemessage(socket);
 				
-				try {
-					datagramSocketunicast.receive(datagramPacketSoundStates4);
-				} catch (IOException e1) {
-					e1.printStackTrace();
-				}
-				
-				String soundStateMessageRecieved=new String(bsoundstates);
-				
-				System.out.println(soundStateMessageRecieved);
-				
-				//Sending Acknowledgment to the client to let him know that the server received the Sound State Message,(-->datagramPacketUnicastSoundState5)
-				byte [] byteAcknowledgementSoundState=acknowledgementSoundState.getBytes();//Transferring the Strings to Bytes
-				DatagramPacket datagramPacketUnicastSoundState5=new DatagramPacket(byteAcknowledgementSoundState,byteAcknowledgementSoundState.length,clientIP,clientPortInteger);//creating the packet
-				
-				try {
-					datagramSocketunicast.send(datagramPacketUnicastSoundState5);//send the packet
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-				
+				//Sending Acknowledgment to the client to let him know that the server received the Sound State Message
+				send(acknowledgementSoundState,clientIP,clientPortInteger);
 				//Identifying the received message
 				String soundState="";
 					if(soundStateMessageRecieved.equals("SD0")){
@@ -180,24 +136,17 @@ class UniCastThreadRun implements Runnable, serverInterface{//client
 					}else if(soundStateMessageRecieved.equals("DQR")){
 						//Receiving "DQR" from the client means that he will disconnect
 						//close and disconnect the datagramSocketForUniCast
-						datagramSocketunicast.close();
-						datagramSocketunicast.disconnect();
+						//datagramSocketunicast.close();
+						//datagramSocketunicast.disconnect();
 						
+					
 						//===================check this step with juan carlos
 						ClientIpArrayList.remove(clientIP);//removing the client IP from the ArrayList
-						
 						client.setStatus(0);//setting the flag 0 to not access the if condition again
 					}else{
 						//if the client sends something else rather than the sound states or the disconnect message we will send him "500" message,(-->datagramPacketUnicastunknownCommandMessage6)
 						System.out.println("UnKnown Command !!!");
-						byte [] byteunknownCommandMessage=unknownCommandMessage.getBytes();//Transferring the Strings to Bytes
-						DatagramPacket datagramPacketUnicastunknownCommandMessage6=new DatagramPacket(byteunknownCommandMessage,byteunknownCommandMessage.length,clientIP,clientPortInteger);//creating the packet
-						
-						try {
-							datagramSocketunicast.send(datagramPacketUnicastunknownCommandMessage6);//send the packet
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
+						send(unknownCommandMessage,clientIP,clientPortInteger);
 					}
 			
 					//String Contains the received sound state,the date and time of receiving it and the IP of the client
@@ -211,15 +160,67 @@ class UniCastThreadRun implements Runnable, serverInterface{//client
 						fileWriterSoundStates.close();
 					} catch (IOException e) {
 						e.printStackTrace();
-					}
-							
+					}	
 		}//the end of the attention loop it finishes when the client status goes to 0
 		//TODO other cleaning operations if needed
 		
-		
 	}//the end of the run loop
-	
-	
-	
 }//the end of the UniCastThreadRun class
+//methods
+	//Send Packets
+	public static void send(String message,InetAddress IP,int Port){
+		byte [] buffer=message.getBytes();
+		DatagramPacket datagrampacket=new DatagramPacket(buffer,buffer.length,IP,Port); 
+		try {
+			DatagramSocket datagramSocket=new DatagramSocket();
+			datagramSocket.send(datagrampacket);
+		} catch (SocketException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+	}
+	//Receive Packet
+	private static InetAddress clientIP;
+	private static int clientPort;
+	private static SocketAddress socket;
+	public static String recievemessage(SocketAddress socket){
+		byte [] buffer=new byte [3];
+		DatagramPacket datagrampacket=new DatagramPacket(buffer,buffer.length);
+		try {
+			DatagramSocket datagramsocket=new DatagramSocket(socket);
+			datagramsocket.receive(datagrampacket);
+		} catch (SocketException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		String message=new String(buffer);
+		InetAddress clientIP=datagrampacket.getAddress();
+		setclientIP(clientIP);
+		int port=datagrampacket.getPort();
+		setclientPort(port);
+		return message;
+	}
+	//Getter and Setter IP,Port "for the receiving method" and Socket 
+	public static void setclientIP(InetAddress clientIP){
+		MulticastthreadRun2.clientIP=clientIP;
+	}
+	public static InetAddress getclientIP(){
+		return clientIP;
+	}
+	public static void setclientPort(int clientIPort){
+		MulticastthreadRun2.clientPort=clientIPort;
+	}
+	public static int getclientPort(){
+		return clientPort;
+	}
+	public static void setsocket(SocketAddress socket){
+		MulticastthreadRun2.socket=socket;
+	}
+	public static SocketAddress getsocket(){
+		return socket;
+	}
+	
 }//end multicast
