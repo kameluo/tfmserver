@@ -3,7 +3,7 @@ class Client{
 	//=============================ask juan carlos about the static in the 3 variables
 	private static String clientIP;
 	private static String clientport;
-	int status=0;
+	private static String status;
 
 	public Client(String ip,String port){
 		clientIP=ip;
@@ -15,10 +15,10 @@ class Client{
 	public String getClientIP() {
 		return clientIP;
 	}
-	public void setStatus(int status) {
+	public void setStatus(String status) {
 		this.status = status;
 	}
-	public int getStatus() {
+	public String getStatus() {
 		return status;
 	}
 }
