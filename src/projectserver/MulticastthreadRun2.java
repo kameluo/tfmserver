@@ -31,7 +31,7 @@ class MulticastthreadRun2 implements Runnable,serverInterface{
 						int portMulticastCast=3456;//receiving port
 						InetAddress group=InetAddress.getByName("225.4.5.6");
 						InetSocketAddress mg = new InetSocketAddress(group,portMulticastCast);
-						InetSocketAddress is = new InetSocketAddress("192.168.0.119",portMulticastCast);//the IP of this machine
+						InetSocketAddress is = new InetSocketAddress("192.168.0.104",portMulticastCast);//the IP of this machine
 						MulticastSocket multicastSocket=new MulticastSocket(is);
 						NetworkInterface nis = NetworkInterface.getByInetAddress(is.getAddress());
 						multicastSocket.joinGroup(mg,nis);//subscribing the multicast IP address to that socket,listening to the message
@@ -52,7 +52,7 @@ class MulticastthreadRun2 implements Runnable,serverInterface{
 						String clientIPString=clientIP.getHostAddress();//converting the IP from Bytes format to String format to access the client IPs Array list
 						String clientPortString=String.valueOf(clientPort);//converting the Port from integer format to String format to access the client IPs Array list
 						
-						SocketAddress socket = new InetSocketAddress("192.168.0.119",20002);
+						SocketAddress socket = new InetSocketAddress("192.168.0.104",20002);
 						System.out.println(multiMessage.equals("CRQ"));
 						setsocket(socket);
 					//the end of the broadcast
