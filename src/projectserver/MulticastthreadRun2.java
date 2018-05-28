@@ -29,30 +29,31 @@ class MulticastthreadRun2 implements Runnable,serverInterface{
 				try {
 					//Receiving the "CRQ" message from the Client by a Multicast datagram object 
 						int portMulticastCast=3456;//receiving port
-						InetAddress group=InetAddress.getByName("225.4.5.6");
+						InetAddress group=InetAddress.getByName("225.4.5.6");//The MultiCast Group 
 						InetSocketAddress mg = new InetSocketAddress(group,portMulticastCast);
+						//TODO Enter the IP of this PC in the next line
 						InetSocketAddress is = new InetSocketAddress("192.168.0.104",portMulticastCast);//the IP of this machine
 						MulticastSocket multicastSocket=new MulticastSocket(is);
 						NetworkInterface nis = NetworkInterface.getByInetAddress(is.getAddress());
 						multicastSocket.joinGroup(mg,nis);//subscribing the multicast IP address to that socket,listening to the message
 						
 						byte [] bMulti=new byte[3];
-						DatagramPacket datagrampacketmulticast=new DatagramPacket(bMulti,bMulti.length);
-						multicastSocket.receive(datagrampacketmulticast);
+						DatagramPacket datagramPacketMulticast=new DatagramPacket(bMulti,bMulti.length);
+						multicastSocket.receive(datagramPacketMulticast);
 						String multiMessage=new String(bMulti);
 						System.out.println(multiMessage);
 						
-						InetAddress clientIP=datagrampacketmulticast.getAddress();
-						int clientPort=datagrampacketmulticast.getPort();
+						InetAddress clientIP=datagramPacketMulticast.getAddress();
+						int clientPort=datagramPacketMulticast.getPort();
 						System.out.println(clientIP+"<<<<<<<<<<<<<<<<<<<<<<<<<<<");
 						System.out.println(clientPort+"___________________________");
-						setclientIP(clientIP);
-						setclientPort(clientPort);
+						setclientIP(clientIP);//Getting the IP of the the received message 
+						setclientPort(clientPort);//Getting the Port of the the received message 
 						
 						String clientIPString=clientIP.getHostAddress();//converting the IP from Bytes format to String format to access the client IPs Array list
 						String clientPortString=String.valueOf(clientPort);//converting the Port from integer format to String format to access the client IPs Array list
-						
-						SocketAddress socket = new InetSocketAddress("192.168.0.104",20002);
+						//TODO Enter the IP of this PC in the next line
+						SocketAddress socket = new InetSocketAddress("192.168.0.104",20002);//creating a scoket but for unicast
 						System.out.println(multiMessage.equals("CRQ"));
 						setsocket(socket);
 					//the end of the broadcast
@@ -81,9 +82,10 @@ class MulticastthreadRun2 implements Runnable,serverInterface{
 				//}//the end of the infinite while ,to be able to wait for many clients
 	}
 	
-	public void setMyList(ArrayList<Client> ClientIpArrayList){
+	/*public void setMyList(ArrayList<Client> ClientIpArrayList){
 		this.ClientIpArrayList=ClientIpArrayList;
 	}
+	*/
 	private int addClient(Client c){
 		//TODO check if the client already exists prior to insert it in the list
 		if(!ClientIpArrayList.contains(c)){//checking if the array list contains that IP address or not,if not we will add it to it
@@ -98,12 +100,12 @@ class UniCastThreadRun implements Runnable, serverInterface{//client
 	UniCastThreadRun(Client c){
 		client=c;
 	}
+	//Constructing the date
+			DateFormat dateformat = new SimpleDateFormat("dd/MM/yy HH:mm a");//To Set the Format of the Date
+			Date currentdate = new Date();//To Get the Current Date
+	
 	@Override
-	public void run() {
-		//Constructing the date
-		DateFormat dateformat = new SimpleDateFormat("dd/MM/yy HH:mm a");//To Set the Format of the Date
-		Date currentdate = new Date();//To Get the Current Date
-				
+	public void run() {		
 		//creating a log file for the receiver side
 		File file=new File("logserver.txt");
 		if(!file.exists()){
@@ -113,7 +115,6 @@ class UniCastThreadRun implements Runnable, serverInterface{//client
 				e.printStackTrace();
 			}
 		}
-	
 		InetAddress clientIP =MulticastthreadRun2.getclientIP();
 		int clientPort=MulticastthreadRun2.getclientPort();
 		System.out.println(clientPort);
@@ -122,7 +123,6 @@ class UniCastThreadRun implements Runnable, serverInterface{//client
 		String state=client.getStatus();
 		System.out.println(state.length());
 		System.out.println(state.equals("1"));
-		
 		
 		while(state.equals("1")){
 				//Receiving the Sound States
@@ -157,7 +157,7 @@ class UniCastThreadRun implements Runnable, serverInterface{//client
 						send(unknownCommandMessage,clientIP,clientPort);
 					}
 			
-					//String Contains the received sound state,the date and time of receiving it and the IP of the client
+					//String Contains the received sound state,the date, time of receiving it and the IP of the client
 					String currentState=dateformat.format(currentdate)+" "+clientIP+" "+soundState;
 		
 					if(!oldstate.equals(soundStateMessageRecieved)){
@@ -174,12 +174,17 @@ class UniCastThreadRun implements Runnable, serverInterface{//client
 					}
 					
 		}//the end of the attention loop it finishes when the client status goes to 0
-		//TODO other cleaning operations if needed
 		
 	}//the end of the run loop
 }//the end of the UniCastThreadRun class
-//methods
-	//Send Packets
+/***************************************** The Methods ******************************************************/
+	/**
+	 * Sending Packets Method
+	 * @param message-the message we want to send to the client side
+	 * @param IP-in InetAddress format
+	 * @param Port-in integer format
+	 * @return Null
+	 */
 	public static void send(String message,InetAddress IP,int Port){
 		byte [] buffer=message.getBytes();
 		DatagramPacket datagrampacket=new DatagramPacket(buffer,buffer.length,IP,Port); 
@@ -195,10 +200,11 @@ class UniCastThreadRun implements Runnable, serverInterface{//client
 			e.printStackTrace();
 		}
 	}
-	//Receive Packet
-	private static InetAddress clientIP;
-	private static int clientPort;
-	private static SocketAddress socket;
+	/**
+	 * message we will receive from the client side
+	 * @param IP of the socket in SocketAddress format
+	 * @return message received from the client side in string format
+	 */
 	public static String recievemessage(SocketAddress socket){
 		byte [] buffer=new byte [3];
 		DatagramPacket datagrampacket=new DatagramPacket(buffer,buffer.length);
@@ -218,7 +224,10 @@ class UniCastThreadRun implements Runnable, serverInterface{//client
 		setclientPort(port);
 		return message;
 	}
-	//Getter and Setter IP,Port "for the receiving method" and Socket 
+	private static InetAddress clientIP;
+	private static int clientPort;
+	private static SocketAddress socket;
+	/** Getter and Setter IP,Port "for the receiving method" and Socket **/
 	public static void setclientIP(InetAddress clientIP){
 		MulticastthreadRun2.clientIP=clientIP;
 	}
