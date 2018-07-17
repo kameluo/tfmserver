@@ -32,7 +32,7 @@ class MulticastthreadRun2 implements Runnable,serverInterface{
 						InetAddress group=InetAddress.getByName("225.4.5.6");//The MultiCast Group 
 						InetSocketAddress mg = new InetSocketAddress(group,portMulticastCast);
 						//TODO Enter the IP of this PC in the next line
-						InetSocketAddress is = new InetSocketAddress("192.168.0.104",portMulticastCast);//the IP of this machine
+						InetSocketAddress is = new InetSocketAddress("192.168.0.103",portMulticastCast);//the IP of this machine
 						MulticastSocket multicastSocket=new MulticastSocket(is);
 						NetworkInterface nis = NetworkInterface.getByInetAddress(is.getAddress());
 						multicastSocket.joinGroup(mg,nis);//subscribing the multicast IP address to that socket,listening to the message
@@ -53,11 +53,13 @@ class MulticastthreadRun2 implements Runnable,serverInterface{
 						String clientIPString=clientIP.getHostAddress();//converting the IP from Bytes format to String format to access the client IPs Array list
 						String clientPortString=String.valueOf(clientPort);//converting the Port from integer format to String format to access the client IPs Array list
 						//TODO Enter the IP of this PC in the next line
-						SocketAddress socket = new InetSocketAddress("192.168.0.104",20002);//creating a scoket but for unicast
+						SocketAddress socket = new InetSocketAddress("192.168.0.103",20002);//creating a scoket but for unicast
 						System.out.println(multiMessage.equals("CRQ"));
 						setsocket(socket);
 					//the end of the broadcast
 					System.out.println("after receiving the CRQ");
+					
+					
 					
 					//Sending the log In message to the whole group by a unicast datagram object
 					send(loginMessage,clientIP,clientPort);
@@ -124,12 +126,14 @@ class UniCastThreadRun implements Runnable, serverInterface{//client
 		System.out.println(state.length());
 		System.out.println(state.equals("1"));
 		
+		
+		
 		while(state.equals("1")){
 				//Receiving the Sound States
 				String soundStateMessageRecieved=recievemessage(getsocket());
 				System.out.println(soundStateMessageRecieved);
 				//Sending Acknowledgment to the client to let him know that the server received the Sound State Message
-				send(acknowledgementSoundState,clientIP,clientPort);
+				send(acknowledgementSoundState,clientIP,clientPort);//16-7-2018
 				//Identifying the received message
 				String soundState="";
 					if(soundStateMessageRecieved.equals("SD0")){
