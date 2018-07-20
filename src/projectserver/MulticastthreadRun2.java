@@ -34,7 +34,8 @@ class MulticastthreadRun2 implements Runnable,serverInterface{
 						InetAddress group=InetAddress.getByName("225.4.5.6");//The MultiCast Group 
 						InetSocketAddress mg = new InetSocketAddress(group,portMulticastCast);
 						//TODO Enter the IP of this PC in the next line
-						InetSocketAddress is = new InetSocketAddress("192.168.0.102",portMulticastCast);//the IP of this machine
+						InetAddress ipLocal=InetAddress.getLocalHost();
+						InetSocketAddress is = new InetSocketAddress(ipLocal.getHostAddress(),portMulticastCast);//the IP of this machine
 						MulticastSocket multicastSocket=new MulticastSocket(is);
 						NetworkInterface nis = NetworkInterface.getByInetAddress(is.getAddress());
 						multicastSocket.joinGroup(mg,nis);//subscribing the multicast IP address to that socket,listening to the message
@@ -55,7 +56,7 @@ class MulticastthreadRun2 implements Runnable,serverInterface{
 						String clientIPString=clientIP.getHostAddress();//converting the IP from Bytes format to String format to access the client IPs Array list
 						String clientPortString=String.valueOf(clientPort);//converting the Port from integer format to String format to access the client IPs Array list
 						//TODO Enter the IP of this PC in the next line
-						SocketAddress socket = new InetSocketAddress("192.168.0.102",20002);//creating a scoket but for unicast
+						SocketAddress socket = new InetSocketAddress(ipLocal.getHostAddress(),20002);//creating a scoket but for unicast
 						System.out.println(multiMessage.equals("CRQ"));
 						setsocket(socket);
 					//the end of the broadcast
