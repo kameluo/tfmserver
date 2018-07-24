@@ -24,10 +24,13 @@ class MulticastthreadRun2 implements Runnable,serverInterface{
 	static String oldstate="SD2";
 	
 	DatagramSocket datagramSocketsending;
+
+	
+
 	
 	@Override
 	public void run() {
-				//while(true){
+				while(true){
 				try {
 					//Receiving the "CRQ" message from the Client by a Multicast datagram object 
 						int portMulticastCast=3456;//receiving port
@@ -56,7 +59,7 @@ class MulticastthreadRun2 implements Runnable,serverInterface{
 						String clientIPString=clientIP.getHostAddress();//converting the IP from Bytes format to String format to access the client IPs Array list
 						String clientPortString=String.valueOf(clientPort);//converting the Port from integer format to String format to access the client IPs Array list
 						//TODO Enter the IP of this PC in the next line
-						SocketAddress socket = new InetSocketAddress(ipLocal.getHostAddress(),20002);//creating a scoket but for unicast
+						SocketAddress socket = new InetSocketAddress(ipLocal.getHostAddress(),20002);//creating a socket but for unicast
 						System.out.println(multiMessage.equals("CRQ"));
 						setsocket(socket);
 					//the end of the broadcast
@@ -64,12 +67,15 @@ class MulticastthreadRun2 implements Runnable,serverInterface{
 					
 					
 					
+					
+					//Socket to sending
 					try {
 						datagramSocketsending=new DatagramSocket();
 						datagramSocketsending.setReuseAddress(true);
 					} catch (SocketException e) {
 						e.printStackTrace();
 					}
+					
 					
 					
 					
@@ -93,7 +99,7 @@ class MulticastthreadRun2 implements Runnable,serverInterface{
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-				//}//the end of the infinite while ,to be able to wait for many clients
+				}//the end of the infinite while ,to be able to wait for many clients
 	}
 	
 	/*public void setMyList(ArrayList<Client> ClientIpArrayList){
@@ -115,13 +121,15 @@ class UniCastThreadRun implements Runnable, serverInterface{//client
 	
 	UniCastThreadRun(Client c){
 		client=c;
+		
 	}
 	//Constructing the date
 			DateFormat dateformat = new SimpleDateFormat("dd/MM/yy HH:mm a");//To Set the Format of the Date
 			Date currentdate = new Date();//To Get the Current Date
 	
-			DatagramSocket datagramSocketrecieving;
 			
+			DatagramSocket datagramSocketrecieving;
+		
 	@Override
 	public void run() {		
 		//creating a log file for the receiver side
@@ -135,14 +143,13 @@ class UniCastThreadRun implements Runnable, serverInterface{//client
 		}
 		
 		//Socket to receive
-		try {
-			datagramSocketrecieving=new DatagramSocket(getsocket());
-			
-		} catch (SocketException e) {
-			e.printStackTrace();
-			System.err.println("Error creating receiveing socket. "+ e.getMessage()+"\r\n CLOSING SERVER...");
-			return;
-		} 
+				try {
+					datagramSocketrecieving=new DatagramSocket(getsocket());
+				} catch (SocketException e) {
+					e.printStackTrace();
+					System.err.println("Error creating receiveing socket. "+ e.getMessage()+"\r\n CLOSING SERVER...");
+					return;
+				}
 		
 		
 		InetAddress clientIP =MulticastthreadRun2.getclientIP();
@@ -158,7 +165,7 @@ class UniCastThreadRun implements Runnable, serverInterface{//client
 		
 		while(state.equals("1")){
 				//Receiving the Sound States
-				String soundStateMessageRecieved=recievemessage(getsocket(),datagramSocketrecieving);
+				String soundStateMessageRecieved=recievemessage(datagramSocketrecieving);
 				System.out.println(soundStateMessageRecieved);
 				//Sending Acknowledgment to the client to let him know that the server received the Sound State Message
 				send(acknowledgementSoundState,clientIP,clientPort,datagramSocketsending);//16-7-2018
@@ -234,7 +241,7 @@ class UniCastThreadRun implements Runnable, serverInterface{//client
 	 * @param IP of the socket in SocketAddress format
 	 * @return message received from the client side in string format
 	 */
-	public  String recievemessage(SocketAddress socket,DatagramSocket datagramSocketrecieving){
+	public  String recievemessage(DatagramSocket datagramSocketrecieving){
 		byte [] buffer=new byte [3];
 		DatagramPacket datagrampacket=new DatagramPacket(buffer,buffer.length);
 		try {
